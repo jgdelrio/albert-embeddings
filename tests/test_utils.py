@@ -15,4 +15,4 @@ def test_paragraphs_join():
 
 
 if __name__ == "__main__":
-    test_paragraphs2text()
+    test_paragraphs_join()

@@ -4,7 +4,7 @@ import pytest
 from hamcrest import assert_that, equal_to, isinstanceof
 from albert_emb.utils import get_logger
 from albert_emb.nlp_model import get_embeddings, load_model
-from albert_emb.config import ALBERT, ROOT
+from albert_emb.config import MODELS, ROOT
 
 
 logger = get_logger(name='test-albert')
@@ -24,8 +24,12 @@ def test_get_embeddings(text_in, expected, curate, aggregate):
     sample_ref, exp_word_count, exp_char_count = expected
     exp_embeddings = torch.load(ROOT.joinpath('tests', 'samples', sample_ref))
 
-    embeddings, word_count, char_count = get_embeddings(text_in, curate, aggregate)
-    assert_that(embeddings.shape[0], equal_to(ALBERT['params']['hidden_size']))
+    result = get_embeddings(text_in, curate, aggregate)
+    embeddings = result["embeddings"]
+    word_count = result["word_count"]
+    char_count = result["char_count"]
+
+    assert_that(embeddings.shape[0], equal_to(MODELS['albert-base-v2']['hidden_size']))
     logger.debug(f"Result shape is: {embeddings.shape}")
     assert(torch.all(embeddings.eq(exp_embeddings)))
     assert_that(word_count, equal_to(exp_word_count))
@@ -54,7 +58,7 @@ def test_load_model_raise_name_error():
 
 
 def test_load_model_albert():
-    name = 'ALBERT'
+    name = 'albert-base-v2'
     model, tokenizer = load_model(name)
 
     assert(isinstance(model, AlbertModel))
