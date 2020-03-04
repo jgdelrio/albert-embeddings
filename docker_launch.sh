@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Prepare log files and start outputting logs to stdout
-touch /albert_emb/gunicorn.log
-touch /albert_emb/access.log
+touch /albert_repo/gunicorn.log
+touch /albert_repo/access.log
 echo Starting nginx
 # Start Gunicorn processes
 echo Starting Gunicorn
@@ -11,8 +11,8 @@ exec gunicorn main:app \
     --worker-class aiohttp.worker.GunicornWebWorker \
     --workers 1 \
     --log-level=info \
-    --log-file=/albert_emb/gunicorn.log \
-    --access-logfile=/albert_emb/access.log &
+    --log-file=/albert_repo/gunicorn.log \
+    --access-logfile=/albert_repo/access.log &
 
 exec nginx -g "daemon off;"
 
