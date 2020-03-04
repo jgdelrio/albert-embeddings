@@ -39,10 +39,16 @@ async def encode(request):
             raise TypeError("text is not string type")
 
         logger.info(f"Processing text: {text[:15]}...")
-        embeddings = get_embeddings(text, logger=logger)
+        processed_emb = get_embeddings(text, logger=logger)
 
         # Response including API and model info
-        response = {**embeddings, "API_version": API_VERSION}
+        response = {
+            "embeddings": processed_emb['embeddings'].cpu().numpy().tolist(),
+            "word_count": processed_emb['word_count'],
+            "char_count": processed_emb['char_count'],
+            "model_name": processed_emb['model_name'],
+            "model_version": processed_emb['model_version'],
+            "API_version": API_VERSION}
 
         return web.Response(
             body=json.dumps(response),

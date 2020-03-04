@@ -10,6 +10,7 @@ from albert_emb.config import MODELS, ROOT
 logger = get_logger(name='test-albert')
 
 GET_EMBEDDINGS_TEST = [
+    ("Hello, world!", ('hello_world.pt', 2, 13), False, "mean"),
     ("Colon discovered America", ('simple_phrase.pt', 3, 24), False, "mean"),
     ("Colon discovered America. Later he returned to Spain.", ('phrase2.pt', 8, 53), False, "mean"),
     (["Colon again.", "He come and go.", "With three carabellas."], ('paragraphs3.pt', 9, 51), False, "mean"),
@@ -22,7 +23,7 @@ GET_EMBEDDINGS_TEST = [
 @pytest.mark.parametrize("text_in, expected, curate, aggregate", GET_EMBEDDINGS_TEST)
 def test_get_embeddings(text_in, expected, curate, aggregate):
     sample_ref, exp_word_count, exp_char_count = expected
-    exp_embeddings = torch.load(ROOT.joinpath('tests', 'samples', sample_ref))
+    exp_embeddings = torch.load(ROOT.joinpath('test', 'samples', sample_ref))
 
     result = get_embeddings(text_in, curate, aggregate)
     embeddings = result["embeddings"]
@@ -66,4 +67,4 @@ def test_load_model_albert():
 
 
 if __name__ == "__main__":
-    test_load_model_albert()
+    test_get_embeddings(*GET_EMBEDDINGS_TEST[0])
