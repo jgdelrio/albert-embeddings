@@ -1,7 +1,7 @@
 import re
 import torch
 from transformers import AlbertConfig, AlbertModel, AlbertTokenizer, PreTrainedModel, PreTrainedTokenizer
-from albert_emb.config import DEFAULT_MODEL, MODELS, ROOT
+from albert_emb.config import DEFAULT_MODEL, MODELS, ROOT, MODEL_FOLDER
 from albert_emb.utils import get_logger
 
 
@@ -39,6 +39,7 @@ def load_model(name=DEFAULT_MODEL):
 
 
 def retrieve_model(name=DEFAULT_MODEL, logger=get_logger('model-retrieval')):
+    # Verify if model exists and retrieve it otherwisemodel.dummy_inputs['input_ids']
     model_folder = ROOT.joinpath('model', name)
     model_folder.mkdir(parents=True, exist_ok=True)
     if model_folder.joinpath('pytorch_model.bin').exists():
@@ -50,6 +51,7 @@ def retrieve_model(name=DEFAULT_MODEL, logger=get_logger('model-retrieval')):
         except Exception as err:
             logger.error(f"ERROR loading the requested model {name}: {err}")
 
+    # Verify if tokenizer exists and retrieve it otherwise
     tokenizer_folder = ROOT.joinpath('model', f"{name}_tok")
     tokenizer_folder.mkdir(parents=True, exist_ok=True)
     if tokenizer_folder.joinpath('spiece.model').exists():
@@ -64,8 +66,10 @@ def retrieve_model(name=DEFAULT_MODEL, logger=get_logger('model-retrieval')):
 
 # Load model and tokenizer
 model, tokenizer = load_model()
-# Put the model in 'evaluation' mode (feed-forward operation)
+# Put the model in 'evaluation/inference' mode (feed-forward operation).
+# Operations like dropout or batchnorm behave differently in inference and training mode.
 model.eval()
+model.train(False)
 
 # Accessing the model configuration
 configuration = model.config
@@ -136,3 +140,35 @@ def get_embeddings(text, curate=True, aggregate="mean", logger=get_logger()):
         "char_count": char_count,
         "model_name": MODELS[DEFAULT_MODEL]['name'],
         "model_version": MODELS[DEFAULT_MODEL]['version']}
+
+
+def save_pytorch():
+    with open(MODEL_FOLDER.joinpath('model.pth').as_posix(), 'wb') as f:
+        torch.save(model.state_dict(), f)
+
+
+def model2onnx(torch_model=model, name='output.onnx', logger=get_logger('export2onnx')):
+    # Note: Saving ALBERT into onnx requires to add 'einsum' function to the library so it can be saved
+    batch = 10
+    input_ids = torch.randint(1, 20000, (batch, 1), requires_grad=False)
+    torch_out = torch_model(input_ids)
+
+    full_model_ref = MODEL_FOLDER.joinpath(name)
+
+    # Export model
+    torch.onnx.export(model,                        # model selected
+                      input_ids,                    # model input (or a tuple for multiple inputs)
+                      full_model_ref.as_posix(),    # where to save the model (file or file-like object)
+                      export_params=True,           # store the trained parameter weights inside the model file
+                      opset_version=10,             # the ONNX version to export the model to
+                      do_constant_folding=True,     # whether to execute constant folding for optimization
+                      input_names=['input'],        # the model's input names
+                      output_names=['output'],      # the model's output names
+                      dynamic_axes={'input': {1: 'batch_size'},     # variable lenght axes
+                                    'output': {1: 'batch_size'}})
+
+    logger.info(f'Model exported to: {full_model_ref}')
+
+
+if __name__ == "__main__":
+    model2onnx()
