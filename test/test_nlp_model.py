@@ -2,12 +2,10 @@ import torch
 from transformers import AlbertModel, AlbertTokenizer
 import pytest
 from hamcrest import assert_that, equal_to, isinstanceof
-from albert_emb.utils import get_logger
+from albert_emb.utils import logger
 from albert_emb.nlp_model import get_embeddings, load_model
 from albert_emb.config import MODELS, ROOT
 
-
-logger = get_logger(name='test-albert')
 
 GET_EMBEDDINGS_TEST = [
     ("Hello, world!", ('hello_world.pt', 2, 13), False, "mean"),

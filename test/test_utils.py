@@ -1,9 +1,6 @@
 import pytest
 from hamcrest import assert_that, equal_to
-from albert_emb.utils import get_logger, paragraphs_join
-
-
-logger = get_logger(name='test-albert')
+from albert_emb.utils import logger, paragraphs_join
 
 
 def test_paragraphs_join():

@@ -1,9 +1,9 @@
+import json
 from aiohttp import web
 from json.decoder import JSONDecodeError
 from albert_emb.config import *
-from albert_emb.utils import logger
+from albert_emb.utils import logger, update_precision
 from albert_emb.nlp_model import get_embeddings
-import json
 
 
 async def healthcheck(request):
@@ -31,22 +31,25 @@ async def encode(request):
 
     try:
         text = parameters.get("text", None)
+        precision = parameters.get("precision", PRECISION)
+
         if text is None:
             logger.info(f"Error: 'text' parameter was not provided")
             raise ValueError("text must be provided")
-        elif not isinstance(text, str):
-            logger.info(f"Error: 'text' must be a string")
+        elif not isinstance(text, (str, list, tuple)):
+            logger.info(f"Error: 'text' must be a string or list")
             raise TypeError("text is not string type")
 
-        logger.info(f"Processing text: {text[:15]}...")
+        if isinstance(text, str):
+            logger.info(f"Processing text: {text[:15]}...")
+        else:
+            logger.info(f"Processing text: {text[0][:15]}...")
         processed_emb = get_embeddings(text, logger=logger)
+        processed_emb['embeddings'] = update_precision(processed_emb['embeddings'], precision)
 
         # Response including API and model info
         response = {
-            "embeddings": processed_emb['embeddings'].cpu().numpy().tolist(),
-            "word_count": processed_emb['word_count'],
-            "char_count": processed_emb['char_count'],
-            "model_name": processed_emb['model_name'],
+            **processed_emb,
             "model_version": processed_emb['model_version'],
             "API_version": API_VERSION}
 

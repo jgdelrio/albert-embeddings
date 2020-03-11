@@ -34,6 +34,8 @@ MODELS = {
     },
 }
 
+PRECISION = "float16"
+
 # Other possible models include:
 #       (BertModel,       BertTokenizer,       'bert-base-uncased')
 #       (OpenAIGPTModel,  OpenAIGPTTokenizer,  'openai-gpt')

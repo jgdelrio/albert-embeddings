@@ -1,8 +1,8 @@
 import re
 import torch
 from transformers import AlbertConfig, AlbertModel, AlbertTokenizer, PreTrainedModel, PreTrainedTokenizer
-from albert_emb.config import DEFAULT_MODEL, MODELS, ROOT, MODEL_FOLDER
-from albert_emb.utils import get_logger
+from albert_emb.config import DEFAULT_MODEL, MODELS, ROOT, MODEL_FOLDER, PRECISION
+from albert_emb.utils import logger
 
 
 SUPPORTED = ["ALBERT"]                      # Models supported
@@ -38,7 +38,7 @@ def load_model(name=DEFAULT_MODEL):
         raise ValueError(f"model {name} is not yet supported. Please use one of: {SUPPORTED}")
 
 
-def retrieve_model(name=DEFAULT_MODEL, logger=get_logger('model-retrieval')):
+def retrieve_model(name=DEFAULT_MODEL, logger=logger):
     # Verify if model exists and retrieve it otherwisemodel.dummy_inputs['input_ids']
     model_folder = ROOT.joinpath('model', name)
     model_folder.mkdir(parents=True, exist_ok=True)
@@ -75,7 +75,7 @@ model.train(False)
 configuration = model.config
 
 
-def get_embeddings(text, curate=True, aggregate="mean", logger=get_logger()):
+def get_embeddings(text, curate=True, aggregate="mean", logger=logger):
     if not isinstance(curate, bool):
         raise TypeError('curate must be boolean')
     if not isinstance(aggregate, str):
@@ -147,7 +147,7 @@ def save_pytorch():
         torch.save(model.state_dict(), f)
 
 
-def model2onnx(torch_model=model, name='output.onnx', logger=get_logger('export2onnx')):
+def model2onnx(torch_model=model, name='output.onnx', logger=logger):
     # Note: Saving ALBERT into onnx requires to add 'einsum' function to the library so it can be saved
     batch = 10
     input_ids = torch.randint(1, 20000, (batch, 1), requires_grad=False)
